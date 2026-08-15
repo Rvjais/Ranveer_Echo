@@ -1,0 +1,15 @@
+{
+  "name": "ranveer_eco_renew",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^2.1.232"
+  }
+}

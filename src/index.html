@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RANVEER // H.U.D.</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+  <body>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
+    <div class="app">
+      <button id="mobile-menu-btn" class="mobile-menu-btn">☰</button>
+      <div id="sidebar-overlay" class="sidebar-overlay"></div>
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="core-react">
+            <div class="core-ring core-ring-1"></div>
+            <div class="core-ring core-ring-2"></div>
+            <div class="core-ring core-ring-3"></div>
+          </div>
+          <div class="brand-text">
+            <h1>RANVEER</h1>
+            <span class="brand-sub">Mk.IV ASSISTANT</span>
+          </div>
+          <span class="badge">RUST</span>
+        </div>
+
+        <div class="sys-line">
+          <span class="sys-label">SYS.STATUS</span>
+          <span class="sys-value online">ONLINE</span>
+        </div>
+
+        <nav>
+          <button class="nav-btn active" data-view="chat">
+            <span class="nav-caret">&gt;</span><span class="nav-label">CHAT</span>
+          </button>
+          <button class="nav-btn" data-view="workspace">
+            <span class="nav-caret">&gt;</span><span class="nav-label">WORKSPACE</span>
+          </button>
+          <button class="nav-btn" data-view="memory">
+            <span class="nav-caret">&gt;</span><span class="nav-label">MEMORY</span>
+          </button>
+          <button class="nav-btn" data-view="smart-home">
+            <span class="nav-caret">&gt;</span><span class="nav-label">SMART HOME</span>
+          </button>
+          <button class="nav-btn" data-view="connect">
+            <span class="nav-caret">&gt;</span><span class="nav-label">CONNECT</span>
+          </button>
+          <button class="nav-btn" data-view="dashboard">
+            <span class="nav-caret">&gt;</span><span class="nav-label">DASHBOARD</span>
+          </button>
+          <button class="nav-btn" data-view="attention">
+            <span class="nav-caret">&gt;</span><span class="nav-label">ATTENTION</span>
+          </button>
+          <button class="nav-btn" data-view="agent">
+            <span class="nav-caret">&gt;</span><span class="nav-label">AGENT</span>
+          </button>
+          <button class="nav-btn" data-view="settings">
+            <span class="nav-caret">&gt;</span><span class="nav-label">SETTINGS</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button id="new-chat-btn" class="ghost-btn">+ NEW CHAT</button>
+        </div>
+      </aside>
+
+      <main class="content">
+        <!-- CHAT VIEW -->
+        <section id="view-chat" class="view active">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> CHAT <span class="bracket">/&gt;</span></h2>
+            <span id="config-indicator" class="status-pill">INITIALIZING…</span>
+          </header>
+
+          <div class="chat-layout">
+            <!-- LEFT COLUMN: Tools & Camera -->
+            <div class="chat-sidebar">
+              <div class="orb-stage">
+                <div class="orb" id="orb">
+                  <div class="orb-pulse orb-pulse-1"></div>
+                  <div class="orb-pulse orb-pulse-2"></div>
+                  <div class="orb-pulse orb-pulse-3"></div>
+                  <div class="orb-core" id="orb-core">
+                    <svg viewBox="0 0 100 100" class="arc-icon" aria-hidden="true">
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="3" opacity="0.35" />
+                      <circle cx="50" cy="50" r="26" fill="none" stroke="currentColor" stroke-width="2" opacity="0.55" />
+                      <circle cx="50" cy="50" r="10" fill="currentColor" opacity="0.9" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="orb-label" id="orb-label">TAP TO ACTIVATE</div>
+                <div class="status-pill" id="voice-status">Voice off</div>
+              </div>
+
+              <div class="voice-actions">
+                <button id="voice-btn" class="ghost-btn active-hold">MIC VOICE</button>
+                <button id="push-to-talk" class="push-btn">HOLD TO TALK</button>
+              </div>
+
+              <div id="live-transcript" class="live-transcript">
+                <span class="live-transcript-label">LIVE CAPTURE</span>
+                <span id="live-transcript-text" class="live-transcript-text">Awaiting speech input…</span>
+              </div>
+
+              <div id="camera-box" class="camera-box">
+                <div class="camera-header">
+                  <span class="camera-title">LIVE CAMERA</span>
+                  <div style="display:flex;gap:4px">
+                    <span id="camera-state" class="camera-state">OFF</span>
+                    <button id="camera-minimize-btn" class="ghost-btn small" style="padding:2px 6px;font-size:10px;">⛁</button>
+                  </div>
+                </div>
+                <img id="camera-feed" class="camera-feed" alt="live camera feed" />
+                <div class="camera-status">
+                  <span>GESTURE: <strong id="camera-gesture" class="camera-chip">—</strong></span>
+                  <span>FACE: <strong id="camera-face" class="camera-chip">—</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Chat -->
+            <div class="chat-main">
+              <div class="chat-window">
+                <div class="chat-window-header">
+                  <span class="chat-window-title">CHAT WINDOW</span>
+                  <span class="chat-window-hint">your input &amp; replies appear here</span>
+                </div>
+                <div id="chat-log" class="chat-log"></div>
+              </div>
+              <form id="chat-form" class="chat-form">
+                <span class="prompt-symbol">&gt;_</span>
+                <input
+                  id="chat-input"
+                  type="text"
+                  placeholder="Awaiting command… (e.g. open chrome, what's the weather in London)"
+                  autocomplete="off"
+                />
+                <button type="submit">EXEC</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- WORKSPACE VIEW -->
+        <section id="view-workspace" class="view">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> WORKSPACE <span class="bracket">/&gt;</span></h2>
+            <input id="ws-search" type="search" placeholder="SEARCH LOGS…" />
+          </header>
+          <div id="conversation-list" class="conversation-list"></div>
+        </section>
+
+        <!-- MEMORY VIEW -->
+        <section id="view-memory" class="view">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> LONG-TERM MEMORY <span class="bracket">/&gt;</span></h2>
+            <button id="memory-refresh" class="ghost-btn">REFRESH</button>
+          </header>
+          <div id="memory-list" class="memory-list"></div>
+        </section>
+
+        <!-- SMART HOME VIEW -->
+        <section id="view-smart-home" class="view">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> SMART HOME <span class="bracket">/&gt;</span></h2>
+          </header>
+          <div id="smart-home-platforms" class="card-grid"></div>
+        </section>
+
+        <!-- CONNECT VIEW -->
+        <section id="view-connect" class="view">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> RANVEER CONNECT <span class="bracket">/&gt;</span></h2>
+          </header>
+          <div id="connect-devices" class="card-grid"></div>
+        </section>
+
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> REMOTE DASHBOARD <span class="bracket">/&gt;</span></h2>
+          </header>
+          <div class="card-grid">
+            <div class="card wide">
+              <h3>LOCAL HTTP RELAY</h3>
+              <p>Control the assistant from any device on your network. Open the dashboard URL in a browser (computer or phone on the same Wi-Fi).</p>
+              <div class="row">
+                <button id="open-dashboard" class="ghost-btn">OPEN RELAY</button>
+              </div>
+              <p style="margin-top:8px">SERVER: <span id="dash-url">http://localhost:8000</span></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ATTENTION VIEW -->
+        <section id="view-attention" class="view">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> ATTENTION / VISION / GESTURE <span class="bracket">/&gt;</span></h2>
+          </header>
+          <div class="card-grid">
+            <div class="card">
+              <h3>OPERATOR ATTENTION</h3>
+              <p id="attention-state">CHECKING…</p>
+              <button id="attention-refresh" class="ghost-btn">REFRESH</button>
+            </div>
+            <div class="card">
+              <h3>VISION / SCREEN ANALYSIS</h3>
+              <p id="vision-local" style="font-size:12px;color:var(--muted)">Visual analysis now runs 100% locally. Live camera, gesture and face identification are shown in the Chat page's camera box — no cloud AI needed. For AI image description, install a vision model with <code>ollama pull llama3.2-vision</code>.</p>
+            </div>
+            <div class="card">
+              <h3>GESTURE CONTROL</h3>
+              <p style="font-size:12px;color:var(--muted)">Hand steers the cursor; pinch = click.</p>
+              <button id="gesture-btn" class="ghost-btn">START GESTURES</button>
+              <p id="gesture-state" style="margin-top:8px;font-size:12px;color:var(--muted)">IDLE</p>
+            </div>
+            <div class="card">
+              <h3>FACE RECOGNITION</h3>
+              <div class="row">
+                <input id="face-name" type="text" placeholder="Your name" style="flex:1" />
+                <button id="face-register" class="ghost-btn">REGISTER</button>
+              </div>
+              <div class="row" style="margin-top:6px">
+                <button id="face-identify" class="ghost-btn">WHO AM I?</button>
+                <button id="face-refresh" class="ghost-btn">LIST FACES</button>
+              </div>
+              <div id="face-result" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- AGENT VIEW -->
+        <section id="view-agent" class="view">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> AUTONOMOUS AGENT <span class="bracket">/&gt;</span></h2>
+          </header>
+          <form id="agent-form" class="chat-form">
+            <span class="prompt-symbol">&gt;_</span>
+            <input
+              id="agent-goal"
+              type="text"
+              placeholder="Describe a multi-step task… (e.g. research the best budget laptops and save a summary to Desktop)"
+              autocomplete="off"
+            />
+            <button type="submit">DEPLOY</button>
+          </form>
+          <div id="agent-status" class="agent-status"></div>
+        </section>
+
+        <!-- SETTINGS VIEW -->
+        <section id="view-settings" class="view">
+          <header class="view-header">
+            <h2><span class="bracket">&lt;</span> SETTINGS <span class="bracket">/&gt;</span></h2>
+            <span id="settings-saved" class="status-pill ok"></span>
+          </header>
+          <div class="settings-panel card">
+            <h3>AI ENGINE</h3>
+            <p class="settings-hint">Pick the local Ollama engine (no keys needed) or a cloud provider with an API key. Keys are stored only in <code>config/api_keys.json</code> on this machine and are never sent anywhere but the provider you choose.</p>
+            <div class="settings-row">
+              <div class="field">
+                <label>PROVIDER</label>
+                <select id="ai-provider">
+                  <option value="airllm">Local (AirLLM)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="gemini">Gemini</option>
+                  <option value="anthropic">Claude (Anthropic)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>MODEL (Hugging Face id)</label>
+                <input id="ai-model-input" type="text" placeholder="e.g. Qwen/Qwen3-0.6B" />
+              </div>
+              <div class="field">
+                <label>INSTALL A LOCAL MODEL (AirLLM)</label>
+                <div class="row-inline">
+                  <select id="airllm-model-select">
+                    <option value="Qwen/Qwen3-0.6B">Qwen3-0.6B — fastest on CPU</option>
+                    <optgroup label="FAST — CPU friendly (0.5–2B)">
+                      <option value="Qwen/Qwen1.5-0.5B">Qwen1.5-0.5B (~1 GB)</option>
+                      <option value="Qwen/Qwen2.5-0.5B-Instruct">Qwen2.5-0.5B-Instruct (~1 GB)</option>
+                      <option value="HuggingFaceTB/SmolLM2-360M-Instruct">SmolLM2-360M (~0.7 GB)</option>
+                      <option value="TinyLlama/TinyLlama-1.1B-Chat-v1.0">TinyLlama-1.1B-Chat (~2.3 GB)</option>
+                      <option value="Qwen/Qwen2.5-1.5B-Instruct">Qwen2.5-1.5B-Instruct (~3 GB)</option>
+                      <option value="HuggingFaceTB/SmolLM2-1.7B-Instruct">SmolLM2-1.7B-Instruct (~3.4 GB)</option>
+                    </optgroup>
+                    <optgroup label="BALANCED (3–8B)">
+                      <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3-mini-4k (~2.2 GB)</option>
+                      <option value="Qwen/Qwen3-4B">Qwen3-4B (~4 GB)</option>
+                      <option value="Qwen/Qwen2.5-7B-Instruct">Qwen2.5-7B-Instruct (~7 GB)</option>
+                      <option value="Qwen/Qwen3-8B">Qwen3-8B (~8 GB)</option>
+                      <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral-7B-Instruct-v0.3 (~7 GB)</option>
+                      <option value="cognitivecomputations/dolphin-2.2.1-mistral-7b">dolphin-mistral-7b (~7 GB)</option>
+                      <option value="internlm/internlm2_5-7b-chat">InternLM2.5-7B-Chat (~7 GB)</option>
+                    </optgroup>
+                    <optgroup label="LARGE (14–32B)">
+                      <option value="Qwen/Qwen2.5-14B-Instruct">Qwen2.5-14B-Instruct (~14 GB)</option>
+                      <option value="Qwen/Qwen3-14B">Qwen3-14B (~14 GB)</option>
+                      <option value="Qwen/Qwen3-30B-A3B">Qwen3-30B-A3B (MoE, ~17 GB)</option>
+                      <option value="Qwen/Qwen3-32B">Qwen3-32B (~32 GB)</option>
+                      <option value="mistralai/Mixtral-8x7B-Instruct-v0.1">Mixtral-8x7B (MoE, ~26 GB)</option>
+                    </optgroup>
+                    <optgroup label="HUGE — needs a GPU (70B+)">
+                      <option value="Qwen/Qwen2.5-72B-Instruct">Qwen2.5-72B-Instruct (~72 GB)</option>
+                      <option value="Qwen/Qwen3-235B-A22B">Qwen3-235B-A22B (MoE, ~3 GB VRAM)</option>
+                    </optgroup>
+                  </select>
+                  <button id="airllm-install-btn" class="ghost-btn">INSTALL</button>
+                </div>
+                <p class="settings-hint">Pick any model and click INSTALL to download it from Hugging Face and shard it layer-by-layer (first install of a big model takes a while). You can also type any Hugging Face model id into the MODEL box above. Start with Qwen3-0.6B — it's the fastest on this CPU.</p>
+              </div>
+              <div class="field">
+                <label>API KEY (cloud providers only)</label>
+                <div class="row-inline">
+                  <input id="ai-key-input" type="password" placeholder="Paste your API key…" autocomplete="off" />
+                  <button id="key-toggle-btn" class="ghost-btn small">SHOW</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>AIRLLM SERVER</label>
+                <div class="row-inline">
+                  <button id="airllm-start-btn" class="ghost-btn">START</button>
+                  <button id="airllm-stop-btn" class="ghost-btn">STOP</button>
+                </div>
+                <span id="airllm-status" class="status-pill">Not running</span>
+                <p class="settings-hint">The server starts automatically with the app. The model loads on first chat or on INSTALL — this machine has no GPU, so generation runs on CPU.</p>
+              </div>
+              <div class="field">
+                <label>CONNECTION</label>
+                <span id="ai-test-result" class="status-pill">Not tested</span>
+              </div>
+            </div>
+            <div class="settings-divider"></div>
+            <div class="row" style="gap:10px; margin-top:4px">
+              <button id="ai-save-btn" class="ghost-btn">SAVE SETTINGS</button>
+              <button id="ai-test-btn" class="ghost-btn">TEST CONNECTION</button>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3>CURRENT ENGINE</h3>
+            <div class="settings-row">
+              <div class="field">
+                <label>ENGINE</label>
+                <span id="ai-engine" class="status-pill ok">Local (Ollama)</span>
+              </div>
+              <div class="field">
+                <label>MODEL</label>
+                <span id="ai-model" class="status-pill ok">…</span>
+              </div>
+              <div class="field">
+                <label>STATUS</label>
+                <span id="ai-status" class="status-pill ok">Checking…</span>
+              </div>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h3>VOICE SHORTCUT</h3>
+            <p class="settings-hint">Hold the <strong>Space</strong> bar (when in Chat) to talk, or use the Hold to Talk button. Release to transmit.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

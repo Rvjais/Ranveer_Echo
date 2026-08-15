@@ -1,0 +1,40 @@
+# AirLLM needs an OLD transformers (airllm 3.1.0 is incompatible with
+# transformers >= 5). Install it in a dedicated venv:
+#   venv\Scripts\python.exe -m pip install "airllm==3.1.0" "transformers<5" "torch>=2.1"
+# Note: airllm is NOT in the list below on purpose — the app drives it from
+# src-tauri and requirements must not force a bad transformers upgrade.
+sounddevice
+google-genai
+google-generativeai
+pillow
+requests
+python-kasa
+beautifulsoup4
+duckduckgo-search
+playwright          
+pyautogui
+pyperclip
+pygetwindow       
+opencv-python
+numpy
+mediapipe
+mss
+psutil
+comtypes
+pycaw               
+win10toast          
+send2trash
+youtube-transcript-api
+pywinauto
+pyaudio
+openpyxl
+python-pptx
+python-docx
+reportlab
+discord.py
+fastapi
+uvicorn[standard]
+cryptography
+qrcode[pil]
+python-multipart
+edge-tts

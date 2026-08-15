@@ -1,0 +1,49 @@
+# === Node / Frontend ===
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === Python / venv ===
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+
+# === Rust / Tauri build ===
+src-tauri/target/
+
+# === Secrets — never commit API keys ===
+config/api_keys.json
+
+# === Editor / OS ===
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+
+# === Logs & debug ===
+logs/
+*.log
+airllm_debug.log
+
+# === HuggingFace model cache (large) ===
+*.safetensors
+splitted_model/
+
+# === Misc ===
+.agents/
+airllm/

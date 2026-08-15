@@ -1,0 +1,6 @@
+{
+  "ai_model": "",
+  "ai_provider": "airllm",
+  "airllm_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "ollama_host": "http://localhost:11434"
+}
