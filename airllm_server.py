@@ -85,9 +85,15 @@ def _patch_accelerate_for_missing_submodules():
 
         accel_mod.set_module_tensor_to_device = _safe_set
         accel_mod._ranveer_patched = True
+        try:
+            import airllm.airllm_base
+            airllm.airllm_base.set_module_tensor_to_device = _safe_set
+        except Exception:
+            pass
     except Exception:
         pass   # If accelerate isn't installed the patch is irrelevant.
 
+_patch_accelerate_for_missing_submodules()
 
 def load_model(model_id, force=False):
     global MODEL, TOKENIZER
