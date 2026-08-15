@@ -341,7 +341,7 @@ pub fn is_online() -> bool {
     let s = settings();
     match s.provider {
         Provider::Ollama => crate::ollama::is_running(),
-        Provider::AirLlm => crate::airllm::is_running() && crate::airllm::status()["loaded"].as_bool().unwrap_or(false),
+        Provider::AirLlm => crate::airllm::is_running(),
         Provider::OpenAI
         | Provider::DeepSeek
         | Provider::OpenRouter
@@ -353,11 +353,15 @@ pub fn is_online() -> bool {
 /// Status payload shown in config_summary / dashboard.
 pub fn status() -> Value {
     let s = settings();
+    let airllm_st = crate::airllm::status();
     json!({
         "provider": s.provider.as_str(),
         "engine": s.provider.label(),
         "model": s.model,
         "online": is_online(),
+        "loaded": airllm_st["loaded"].as_bool().unwrap_or(false),
+        "loading": airllm_st["loading"].as_bool().unwrap_or(false),
+        "ready": airllm_st["ready"].as_bool().unwrap_or(false),
         "api_key_set": api_key_set(s.provider),
     })
 }

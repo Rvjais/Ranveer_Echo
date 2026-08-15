@@ -18,6 +18,7 @@ use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::Duration;
+use tauri::Emitter;
 
 pub const PORT: u16 = 8531;
 const TIMEOUT: Duration = Duration::from_millis(600);
@@ -26,6 +27,21 @@ static AIRLLM_CHILD: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None))
 static READY: AtomicBool = AtomicBool::new(false);
 static LAST_STATE: Lazy<Mutex<Value>> = Lazy::new(|| Mutex::new(Value::Null));
 static LAST_ERR: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new(String::new()));
+static APP_HANDLE: Lazy<Mutex<Option<tauri::AppHandle>>> = Lazy::new(|| Mutex::new(None));
+
+pub fn set_app_handle(app: tauri::AppHandle) {
+    if let Ok(mut g) = APP_HANDLE.lock() {
+        *g = Some(app);
+    }
+}
+
+pub fn emit_state_change() {
+    if let Ok(guard) = APP_HANDLE.lock() {
+        if let Some(app) = guard.as_ref() {
+            let _ = app.emit("airllm-state", status());
+        }
+    }
+}
 
 pub fn base_url() -> String {
     format!("http://127.0.0.1:{PORT}")
@@ -111,15 +127,19 @@ fn spawn_reader<R: std::io::Read + Send + 'static>(reader: R, is_err: bool) {
                         if let Some(rest) = l.strip_prefix("AIRLLM_SERVER_READY") {
                             READY.store(true, Ordering::Relaxed);
                             let _ = rest;
+                            emit_state_change();
                         } else if let Some(rest) = l.strip_prefix("AIRLLM_STATE ") {
                             if let Ok(v) = serde_json::from_str::<Value>(rest) {
                                 *LAST_STATE.lock().unwrap() = v;
+                                emit_state_change();
                             }
                         } else if let Some(rest) = l.strip_prefix("AIRLLM_ERROR ") {
                             *LAST_ERR.lock().unwrap() = rest.to_string();
+                            emit_state_change();
                         }
                     } else if let Some(rest) = l.strip_prefix("AIRLLM_ERROR ") {
                         *LAST_ERR.lock().unwrap() = rest.to_string();
+                        emit_state_change();
                     }
                 }
             }
@@ -195,6 +215,7 @@ pub fn start(model: Option<String>) -> Result<Value, String> {
         let mut guard = AIRLLM_CHILD.lock().unwrap();
         *guard = Some(child);
     }
+    emit_state_change();
     Ok(json!({
         "started": true,
         "port": PORT,
@@ -223,17 +244,18 @@ pub async fn install(model: &str) -> Result<Value, String> {
         .send()
         .await
         .map_err(|e| format!("[AirLLM] install request error: {e}"))?;
-    let status = resp.status();
+    let status_code = resp.status();
     let data: Value = resp
         .json()
         .await
         .unwrap_or(Value::Null);
-    if !status.is_success() {
+    if !status_code.is_success() {
         return Err(format!(
-            "[AirLLM] install failed (HTTP {status}): {}",
+            "[AirLLM] install failed (HTTP {status_code}): {}",
             data["error"]["message"].as_str().unwrap_or("unknown error")
         ));
     }
+    emit_state_change();
     Ok(json!({
         "ok": data["loaded"].as_bool().unwrap_or(false),
         "model": data["model"].as_str().unwrap_or(&model),
@@ -244,12 +266,14 @@ pub async fn install(model: &str) -> Result<Value, String> {
 /// Stops the AirLLM server we own.
 pub fn stop() -> Result<Value, String> {
     let mut guard = AIRLLM_CHILD.lock().unwrap();
-    if let Some(mut c) = guard.take() {
+    let res = if let Some(mut c) = guard.take() {
         let _ = c.kill();
         let _ = c.wait();
         READY.store(false, Ordering::Relaxed);
         Ok(json!({ "stopped": true }))
     } else {
         Ok(json!({ "stopped": false, "already_stopped": true }))
-    }
+    };
+    emit_state_change();
+    res
 }

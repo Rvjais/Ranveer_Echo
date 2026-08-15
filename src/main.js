@@ -44,7 +44,8 @@ function refreshView(view) {
   else if (view === "connect") loadConnect();
   else if (view === "attention") loadAttention();
   else if (view === "agent") refreshAgentStatus();
-  else if (view === "settings") loadKeyFields();
+  else if (view === "settings") syncAllState();
+  else if (view === "chat") loadConfig();
 }
 
 // ── Chat ────────────────────────────────────────────────────────────────
@@ -159,11 +160,34 @@ document.getElementById("new-chat-btn").addEventListener("click", newConversatio
 // ── Config indicator ────────────────────────────────────────────────────
 async function loadConfig() {
   const el = document.getElementById("config-indicator");
+  if (!el) return;
   try {
     const cfg = await invoke("config_summary");
     const model = cfg.ai_model || cfg.local_model || "";
-    el.textContent = `AI: ${cfg.ai_engine}${model ? " · " + model : ""}${cfg.ai_online ? " (online)" : " (offline)"} · ${cfg.os}`;
-    el.classList.toggle("ok", !!cfg.ai_online);
+    let stateTag = "offline";
+    let isOk = false;
+
+    if (cfg.ai_provider === "airllm") {
+      if (cfg.airllm_loading) {
+        stateTag = "loading model…";
+        isOk = true;
+      } else if (cfg.airllm_loaded) {
+        stateTag = "ready";
+        isOk = true;
+      } else if (cfg.airllm_running) {
+        stateTag = "ready";
+        isOk = true;
+      } else {
+        stateTag = "offline";
+        isOk = false;
+      }
+    } else if (cfg.ai_online) {
+      stateTag = "online";
+      isOk = true;
+    }
+
+    el.textContent = `AI: ${cfg.ai_engine}${model ? " · " + model : ""} (${stateTag}) · ${cfg.os}`;
+    el.classList.toggle("ok", isOk);
   } catch (err) {
     el.textContent = `Error: ${err}`;
   }
@@ -543,7 +567,28 @@ async function loadKeyFields() {
     };
     set("ai-engine", cfg.ai_engine || "Local (AirLLM)", true);
     set("ai-model", cfg.ai_model || cfg.local_model || "…", true);
-    set("ai-status", cfg.ai_online ? `${cfg.ai_provider || "AI"} online` : `${cfg.ai_provider || "AI"} offline`, cfg.ai_online);
+
+    let statusText = "offline";
+    let isOk = false;
+    if (cfg.ai_provider === "airllm") {
+      if (cfg.airllm_loading) {
+        statusText = "AirLLM loading model…";
+        isOk = true;
+      } else if (cfg.airllm_loaded || cfg.airllm_running) {
+        statusText = "AirLLM ready";
+        isOk = true;
+      } else {
+        statusText = "AirLLM offline";
+        isOk = false;
+      }
+    } else if (cfg.ai_online) {
+      statusText = `${cfg.ai_provider || "AI"} online`;
+      isOk = true;
+    } else {
+      statusText = `${cfg.ai_provider || "AI"} offline`;
+      isOk = false;
+    }
+    set("ai-status", statusText, isOk);
 
     if (providerSelect && cfg.ai_provider) providerSelect.value = cfg.ai_provider;
     if (modelInput) modelInput.value = cfg.ai_model || "";
@@ -581,8 +626,7 @@ document.getElementById("ai-save-btn").addEventListener("click", async () => {
       airllmStartBtn.click();
     }
     flashSaved("Saved ✓");
-    loadKeyFields();
-    loadConfig();
+    await syncAllState();
   } catch (err) {
     flashSaved(`Error: ${err}`);
   }
@@ -595,6 +639,7 @@ document.getElementById("ai-test-btn").addEventListener("click", async () => {
     const res = await invoke("ai_test_connection");
     testResult.textContent = `${res.provider} · ${res.model} · ${res.latency_ms}ms · "${res.reply}"`;
     testResult.classList.add("ok");
+    await syncAllState();
   } catch (err) {
     testResult.textContent = String(err);
   }
@@ -620,6 +665,14 @@ async function refreshAirllmStatus() {
   }
 }
 
+async function syncAllState() {
+  await Promise.allSettled([
+    loadConfig(),
+    refreshAirllmStatus(),
+    loadKeyFields(),
+  ]);
+}
+
 const airllmStartBtn = document.getElementById("airllm-start-btn");
 if (airllmStartBtn) {
   airllmStartBtn.addEventListener("click", async () => {
@@ -632,7 +685,7 @@ if (airllmStartBtn) {
       } else {
         airllmStatus.textContent = "Already running";
       }
-      setTimeout(refreshAirllmStatus, 1500);
+      setTimeout(syncAllState, 1500);
     } catch (err) {
       airllmStatus.textContent = `Error: ${err}`;
     }
@@ -646,15 +699,12 @@ if (airllmStopBtn) {
       await invoke("airllm_stop");
       airllmStatus.textContent = "Stopped";
       airllmStatus.classList.remove("ok");
-      loadConfig();
+      await syncAllState();
     } catch (err) {
       airllmStatus.textContent = `Error: ${err}`;
     }
   });
 }
-
-refreshAirllmStatus();
-setInterval(refreshAirllmStatus, 5000);
 
 // ── AirLLM model picker + install ───────────────────────────────────────
 const airllmModelSelect = document.getElementById("airllm-model-select");
@@ -686,14 +736,24 @@ if (airllmInstallBtn) {
       } else {
         airllmStatus.textContent = "Install finished with warnings";
       }
-      loadConfig();
+      await syncAllState();
     } catch (err) {
       airllmStatus.textContent = `Error: ${err}`;
       flashSaved(`Install error: ${err}`);
     }
     airllmInstallBtn.textContent = "INSTALL";
     airllmInstallBtn.disabled = false;
-    setTimeout(refreshAirllmStatus, 2000);
+    setTimeout(syncAllState, 2000);
+  });
+}
+
+// Real-time synchronization
+syncAllState();
+setInterval(syncAllState, 3000);
+
+if (window.__TAURI__?.event) {
+  window.__TAURI__.event.listen("airllm-state", () => {
+    syncAllState();
   });
 }
 

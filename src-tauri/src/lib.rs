@@ -103,6 +103,7 @@ async fn ai_list_ollama_models() -> Value {
 #[tauri::command]
 fn config_set_ai_provider(provider: String) -> Result<Value, String> {
     config::set_ai_provider(&provider)?;
+    crate::airllm::emit_state_change();
     Ok(serde_json::json!({
         "ai_provider": config::get_ai_provider(),
         "ai_model": config::get_ai_model(&crate::ai::Provider::from_str(&config::get_ai_provider())),
@@ -113,6 +114,7 @@ fn config_set_ai_provider(provider: String) -> Result<Value, String> {
 fn config_set_ai_model(model: String) -> Result<Value, String> {
     config::set_ai_model(&model)?;
     crate::ollama::invalidate_model_cache();
+    crate::airllm::emit_state_change();
     Ok(serde_json::json!({ "ai_model": model }))
 }
 
@@ -120,6 +122,7 @@ fn config_set_ai_model(model: String) -> Result<Value, String> {
 fn config_set_airllm_model(model: String) -> Result<Value, String> {
     config::set_airllm_model(&model)?;
     crate::ollama::invalidate_model_cache();
+    crate::airllm::emit_state_change();
     Ok(serde_json::json!({ "airllm_model": model }))
 }
 
@@ -127,6 +130,7 @@ fn config_set_airllm_model(model: String) -> Result<Value, String> {
 fn config_set_ollama_host(host: String) -> Result<Value, String> {
     config::set_ollama_host(&host)?;
     crate::ollama::invalidate_model_cache();
+    crate::airllm::emit_state_change();
     Ok(serde_json::json!({ "ollama_host": config::get_ollama_host() }))
 }
 
@@ -498,6 +502,7 @@ async fn face_identify() -> Result<Value, String> {
 #[tauri::command]
 fn config_summary() -> Value {
     let status = crate::ai::status();
+    let airllm_st = crate::airllm::status();
     serde_json::json!({
         "os": config::get_os(),
         "developer_mode": config::developer_mode_enabled(),
@@ -506,6 +511,11 @@ fn config_summary() -> Value {
         "ai_provider": status["provider"].as_str().unwrap_or(""),
         "ai_model": status["model"].as_str().unwrap_or(""),
         "ai_online": status["online"].as_bool().unwrap_or(false),
+        "airllm_running": airllm_st["running"].as_bool().unwrap_or(false),
+        "airllm_ready": airllm_st["ready"].as_bool().unwrap_or(false),
+        "airllm_loading": airllm_st["loading"].as_bool().unwrap_or(false),
+        "airllm_loaded": airllm_st["loaded"].as_bool().unwrap_or(false),
+        "airllm_error": airllm_st["error"].as_str().unwrap_or(""),
         "local_model": crate::ollama::local_model_name(),
         "ollama_running": crate::ollama::is_running(),
         "ollama_host": config::get_ollama_host(),
@@ -516,6 +526,7 @@ fn config_summary() -> Value {
 #[tauri::command]
 fn config_set_api_key(name: String, value: String) -> Result<Value, String> {
     config::set_api_key(&name, &value)?;
+    crate::airllm::emit_state_change();
     Ok(serde_json::json!(config::get_api_key_safe(&name)))
 }
 
@@ -527,6 +538,10 @@ pub fn run() {
     }
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            crate::airllm::set_app_handle(app.handle().clone());
+            Ok(())
+        })
         .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             chat,
